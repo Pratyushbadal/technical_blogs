@@ -13,6 +13,6 @@ urlpatterns = [
     path("logout", log_out, name="user_logout"),
     path("blog-remove/<int:blog_id>", blog_delete, name="blog_delete_page"),
     path("blog-update/<int:blog_id>", blog_update, name="blog_update_page"),
-    path("profile", profile_page, name="profile"),
+    path("profile", profile_page, name="profile_page"),
 ]
 

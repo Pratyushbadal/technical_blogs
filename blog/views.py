@@ -36,7 +36,11 @@ def log_in(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect("home")
+            profile_pic = None
+            if Profile.objects.filter(user__email=request.user.email).exists():
+                profile_pic = Profile.objects.get(user__email=request.user.email).profile_image
+            request.session["profile_pic"] = profile_pic
+            return redirect("profile_page")
         else:
             messages.error(request, message="Email or Password is incorrect")
             return redirect("login")
@@ -164,4 +168,24 @@ def blog_update(request, blog_id):
 @login_required
 def profile_page(request):
     print("request.session: ", request.session.get("blog"))
-    return render(request, "profile.html")
+    profile = {}
+    if Profile.objects.filter(user__email=request.user.email).exists():
+        profile = Profile.objects.get(user__email=request.user.email)
+        if request.method == "POST":
+            contact = request.POST.get("contact")
+            address = request.POST.get("address")
+            profile_image = request.FILES.get("profile_image")
+            if profile_image:
+                profile_image_url = save_file(request, profile_image)
+                profile_profile_image = profile_image_url
+
+            if contact:
+                profile.contact = contact
+
+            if address:
+                profile.address = address
+
+            profile.save()
+
+    context = {"profile": profile}
+    return render(request, "profile.html", context)
