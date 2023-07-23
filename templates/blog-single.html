@@ -1,23 +1,33 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block content %}
-<!-- ======= blogs Section ======= -->
-    <section class="vh-150" style="background-color: #eee;">
-
-<div class="container mt-5">
+{% block content %}    <!-- ======= blogs Section ======= -->
+<section class="vh-150" style="background-color: #eee;">
+    <div class="container mt-5">
         <div class="row">
             <div class="col-sm-12">
                 <div class="card p-3">
-                    <div class="d-flex flex-row mb-3">
-                        <img src="{{ blog.image }}" width="100%">
+                    <div class="d-flex flex-row mb-3"><img src="{{ blog.image }}" width="100%">
                     </div>
                     <h6>{{ blog.title }}</h6>
                     <div class="d-flex justify-content-between install mt-3">
                         <p>{{ blog.description }}</p>
                     </div>
                 </div>
+                {% if request.user.is_superuser %}
+                <span>
+                    <div class="d-flex justify-content-between install mt-3">
+                        <a href="{% url 'blog_update_page' blog_id=blog.id %}" class="btn btn-primary">
+                            Edit Blog
+                        </a>
+
+                        <a href="{% url 'blog_delete_page' blog_id=blog.id %}" class="btn btn-danger">
+                            Delete Blog
+                        </a>
+                    </div>
+                </span>
+                    {% endif %}
             </div>
         </div>
     </div>
-    </section>
+</section>
 {% endblock %}

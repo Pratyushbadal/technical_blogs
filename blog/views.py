@@ -4,13 +4,16 @@ from django.contrib import messages
 from blog.models import Profile, Blog, User
 from django.contrib.auth import authenticate, logout, login
 from django.contrib.auth.decorators import login_required
-
+from django.core.paginator import Paginator
+from django.contrib.admin.views.decorators import user_passes_test
 
 # Create your views here.
+
 
 def home(request):
     message_value = "Hello, world. my first blog application"
     context = {"message": message_value}
+    request.session["blog"] = "My first blog application"
     return render(request, "home.html", context)
 
 
@@ -76,16 +79,32 @@ def about(request):
 
 
 def contact(request):
+    # get value from session
+    print("request.session: ", request.session.get("blog"))
     return render(request, "contact.html")
 
 
 def blogs(request):
-    blogs = Blog.objects.all().order_by("-created_at")
-    context = {"blogs": blogs}
+    search_string = request.GET.get("q")
+    print("search_string: ", search_string)
+    if search_string:
+        blogs= Blog.objects.filter(title__icontains=search_string)
+    else:
+        blogs= Blog.objects.all().order_by("-created_at")
+
+    has_data = len(blogs) > 0
+    page_number = request.GET.get("page", 1)
+    per_page = request.GET.get("per_page", 3)
+    print("page_number: ", page_number)
+    print("per_page: ", per_page)
+    paginator = Paginator(blogs, per_page)
+    blogs_with_pagination = paginator.get_page(page_number)
+    context = {"blogs_with_pagination": blogs_with_pagination, "per_page": per_page, "has_data": has_data}
     return render(request, "blog.html", context)
 
 
 @login_required
+@user_passes_test(lambda user: user.is_superuser)
 def create_blog(request):
     if request.method == "POST":
         title = request.POST.get("title")
@@ -109,3 +128,40 @@ def blog_detail(request, blog_id):
 def log_out(request):
     logout(request)
     return HttpResponseRedirect("/login")
+
+
+@login_required
+@user_passes_test(lambda user: user.is_superuser)
+def blog_delete(request, blog_id):
+    blog = Blog.objects.get(id=blog_id)
+    blog.delete()
+    messages.info(request, message="Blog Deleted Successfully")
+    return redirect("list_blogs")
+
+
+@login_required
+@user_passes_test(lambda user: user.is_superuser)
+def blog_update(request, blog_id):
+        blog = Blog.objects.get(id=blog_id)
+        if request.method == "POST":
+            title = request.POST.get("title")
+            description = request.POST.get("content")
+            blog_image = request.POST.get("blog_image")
+            image_url = request.POST.get("blog_image")
+
+            if title:
+                blog.title = title
+            if description:
+                    blog.description = description
+            if image_url:
+                blog_image = image_url
+            blog.save()
+            messages.info(request, message = "Blog updated successfully")
+            return redirect("list_blogs")
+        return render(request, "edit-blog.html", {"blog": blog})
+
+
+@login_required
+def profile_page(request):
+    print("request.session: ", request.session.get("blog"))
+    return render(request, "profile.html")
