@@ -1,0 +1,17 @@
+Setup for production server
+
+1. install gunicorn
+2. workers(3) and threads(4)
+    -- total no. of concurrent requests = workers * threads
+3. command: gunicorn technical_blogs.asgi -- workers=3 --threads=4
+    -- the above cmd can handle 12 concurrent requests
+
+4. add your blogs in logger_blog.log file
+    cmd: gunicorn technical_blogs_asgi --workers=3 --threads=4 --logfile=logger_blog.log
+
+
+
+FINAL PRODUCTION COMMAND:
+"""
+gunicorn technical_blogs_wsgi --workers=3 --threads=4 --logfile=logger_blog.log
+"""

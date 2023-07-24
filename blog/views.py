@@ -177,7 +177,7 @@ def profile_page(request):
             profile_image = request.FILES.get("profile_image")
             if profile_image:
                 profile_image_url = save_file(request, profile_image)
-                profile_profile_image = profile_image_url
+                profile.profile_image = profile_image_url
 
             if contact:
                 profile.contact = contact
