@@ -6,6 +6,9 @@ from django.contrib.auth import authenticate, logout, login
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.contrib.admin.views.decorators import user_passes_test
+from blog.emailform import EmailForm
+from django.views.generic.edit import FormView
+
 
 # Create your views here.
 
@@ -32,7 +35,7 @@ def log_in(request):
         user_query = User.objects.get(email=email)
         username = None
         if user_query:
-            username = user_query.username   # get username from User table
+            username = user_query.username  # get username from User table
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
@@ -92,9 +95,9 @@ def blogs(request):
     search_string = request.GET.get("q")
     print("search_string: ", search_string)
     if search_string:
-        blogs= Blog.objects.filter(title__icontains=search_string)
+        blogs = Blog.objects.filter(title__icontains=search_string)
     else:
-        blogs= Blog.objects.all().order_by("-created_at")
+        blogs = Blog.objects.all().order_by("-created_at")
 
     has_data = len(blogs) > 0
     page_number = request.GET.get("page", 1)
@@ -146,23 +149,23 @@ def blog_delete(request, blog_id):
 @login_required
 @user_passes_test(lambda user: user.is_superuser)
 def blog_update(request, blog_id):
-        blog = Blog.objects.get(id=blog_id)
-        if request.method == "POST":
-            title = request.POST.get("title")
-            description = request.POST.get("content")
-            blog_image = request.POST.get("blog_image")
-            image_url = request.POST.get("blog_image")
+    blog = Blog.objects.get(id=blog_id)
+    if request.method == "POST":
+        title = request.POST.get("title")
+        description = request.POST.get("content")
+        blog_image = request.POST.get("blog_image")
+        image_url = request.POST.get("blog_image")
 
-            if title:
-                blog.title = title
-            if description:
-                    blog.description = description
-            if image_url:
-                blog_image = image_url
-            blog.save()
-            messages.info(request, message = "Blog updated successfully")
-            return redirect("list_blogs")
-        return render(request, "edit-blog.html", {"blog": blog})
+        if title:
+            blog.title = title
+        if description:
+            blog.description = description
+        if image_url:
+            blog_image = image_url
+        blog.save()
+        messages.info(request, message="Blog updated successfully")
+        return redirect("list_blogs")
+    return render(request, "edit-blog.html", {"blog": blog})
 
 
 @login_required
@@ -189,3 +192,14 @@ def profile_page(request):
 
     context = {"profile": profile}
     return render(request, "profile.html", context)
+
+
+class EmailView(FormView):
+    template_name = "emailform.html"
+    form_class = EmailForm
+    success_url = "/"
+
+    def form_valid(self, form):
+        # this method is called when valid form data has been posted
+        print("form.cleaned_data: ", form.cleaned_data)
+        return super().form_valid(form)
